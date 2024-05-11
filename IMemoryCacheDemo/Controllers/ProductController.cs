@@ -26,7 +26,7 @@ namespace IMemoryCacheDemo.Controllers
         }
 
         [HttpGet(Name = "GetProducts")]
-        [CustomCache("CachedData", 10)]
+        [CustomCache(10)]
         public IActionResult GetProducts()
         {
             productList = new List<Product> { new Product { Name = "Bahce", Price = 4000 }, new Product { Name = "Spor", Price = 10000 } };

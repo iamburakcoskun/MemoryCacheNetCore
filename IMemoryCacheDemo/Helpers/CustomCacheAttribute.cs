@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -6,19 +8,26 @@ namespace IMemoryCacheDemo.Helpers
 {
     public class CustomCacheAttribute : ActionFilterAttribute
     {
+        ActionDescriptor actionDescriptor;
+        private string _cacheKey;
         private readonly IMemoryCache _cache;
-        private readonly string _cacheKey;
         private readonly TimeSpan _expiration;
 
-        public CustomCacheAttribute(string cacheKey, int expirationInSeconds)
+        public CustomCacheAttribute(int expirationInSeconds)
         {
             _cache = new MemoryCache(new MemoryCacheOptions());
-            _cacheKey = cacheKey;
             _expiration = TimeSpan.FromSeconds(expirationInSeconds);
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
+            actionDescriptor = context.ActionDescriptor;
+
+            if (actionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+            {
+                _cacheKey = controllerActionDescriptor.ActionName;
+            }
+
             if (_cache.TryGetValue(_cacheKey, out object cachedValue))
             {
                 context.Result = new ObjectResult(cachedValue);
@@ -32,12 +41,12 @@ namespace IMemoryCacheDemo.Helpers
         {
             if (!(_cache.TryGetValue(_cacheKey, out _)))
             {
-                //Bu kisimda cache onem derecesi ve suresi gibi ayarlamalar yapilmaktadir.
-                var cacheExpOptions = new MemoryCacheEntryOptions
+                actionDescriptor = context.ActionDescriptor;
+
+                if (actionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
                 {
-                    AbsoluteExpiration = DateTime.Now.AddMinutes(30),
-                    Priority = CacheItemPriority.Normal
-                };
+                    _cacheKey = controllerActionDescriptor.ActionName;
+                }
 
                 _cache.Set(_cacheKey, (context.Result as ObjectResult).Value, _expiration);
             }
