@@ -6,14 +6,14 @@ namespace IMemoryCacheDemo.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CatalogController : ControllerBase
+    public class ProductController : ControllerBase
     {
         List<Product> productList;
 
         const string cacheKey = "productKey";
         private readonly IMemoryCache _memoryCache;
 
-        public CatalogController(IMemoryCache memoryCache)
+        public ProductController(IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
         }
